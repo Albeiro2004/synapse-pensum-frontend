@@ -1,0 +1,193 @@
+<div class="min-h-screen bg-slate-950 text-slate-200 flex flex-col">
+
+  <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+  <nav class="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center shrink-0">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-aprobada/20 border border-aprobada/30 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-aprobada" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white leading-none">
+          Pensum <span class="text-aprobada">Estadística</span>
+        </h1>
+        <p class="text-[10px] text-slate-500 mt-0.5">Motor de inferencia académica</p>
+      </div>
+    </div>
+
+    <!-- Right side: tabs + user -->
+    <div class="flex items-center gap-4">
+
+      <!-- Vista tabs -->
+      <div class="hidden sm:flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+        <button
+          (click)="vistaActiva = 'grilla'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150 flex items-center gap-1.5"
+          [class]="vistaActiva === 'grilla'
+            ? 'bg-slate-700 text-white shadow-sm'
+            : 'text-slate-400 hover:text-slate-200'">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          Malla
+        </button>
+        <button
+          (click)="vistaActiva = 'grafo'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150 flex items-center gap-1.5"
+          [class]="vistaActiva === 'grafo'
+            ? 'bg-slate-700 text-white shadow-sm'
+            : 'text-slate-400 hover:text-slate-200'">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/>
+            <path d="M7 12h10M17 6l-10 5M17 18l-10-5"/>
+          </svg>
+          Grafo
+        </button>
+      </div>
+
+      <!-- Avatar + logout -->
+      <div class="flex items-center gap-2">
+        <div class="hidden sm:block text-right">
+          <p class="text-xs font-medium text-slate-200 leading-none">{{ authService.nombreCompleto() }}</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Estudiante</p>
+        </div>
+        <div class="w-7 h-7 rounded-full bg-aprobada/20 border border-aprobada/30 flex items-center justify-center text-aprobada text-xs font-bold">
+          {{ inicial }}
+        </div>
+        <button
+          (click)="onLogout()"
+          title="Cerrar sesión"
+          class="text-slate-500 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-400/10">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── STATS BAR ─────────────────────────────────────── -->
+  <div *ngIf="!loading && materias.length > 0"
+       class="shrink-0 border-b border-slate-800/60 px-6 py-3 flex items-center gap-6 overflow-x-auto">
+
+    <!-- Progress -->
+    <div class="flex items-center gap-3 min-w-max">
+      <div class="w-28 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div class="h-full bg-aprobada rounded-full transition-all duration-700"
+             [style.width.%]="progresoPorc"></div>
+      </div>
+      <span class="text-xs text-slate-400">
+        <span class="text-white font-semibold">{{ stats.aprobadas }}</span>/{{ stats.total }} materias
+      </span>
+    </div>
+
+    <div class="w-px h-4 bg-slate-800 shrink-0"></div>
+
+    <!-- Chips -->
+    <div class="flex items-center gap-3">
+      <span class="badge-aprobada">{{ stats.aprobadas }} aprobadas</span>
+      <span class="badge-disponible">{{ stats.disponibles }} disponibles</span>
+      <span class="badge-bloqueada">{{ stats.bloqueadas }} bloqueadas</span>
+    </div>
+
+    <div class="w-px h-4 bg-slate-800 shrink-0 hidden sm:block"></div>
+
+    <span class="hidden sm:block text-xs text-slate-500 min-w-max">
+      <span class="text-slate-300 font-medium">{{ stats.creditosAprobados }}</span>/{{ stats.creditosTotales }} créditos
+    </span>
+  </div>
+
+  <!-- ─── MAIN ──────────────────────────────────────────── -->
+  <main class="flex-1 overflow-hidden">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex flex-col justify-center items-center h-full gap-4">
+      <div class="w-10 h-10 rounded-full border-2 border-slate-700 border-t-aprobada animate-spin"></div>
+      <p class="text-slate-500 text-sm">Cargando malla curricular…</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="!loading && errorMsg" class="flex flex-col justify-center items-center h-full gap-4">
+      <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+        <svg class="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p class="text-slate-400 text-sm text-center max-w-xs">{{ errorMsg }}</p>
+      <button (click)="cargarDatos()" class="btn-primary text-sm">Reintentar</button>
+    </div>
+
+    <!-- ── VISTA GRILLA ──────────────────────────────────── -->
+    <div *ngIf="!loading && !errorMsg && vistaActiva === 'grilla'"
+         class="h-full flex gap-5 overflow-x-auto px-6 pt-6 pb-8 snap-x snap-mandatory scroll-smooth">
+
+      <div
+        *ngFor="let sem of semestres; let i = index"
+        class="min-w-[260px] max-w-[260px] flex-shrink-0 snap-start flex flex-col animate-slide-up"
+        [style.animation-delay.ms]="i * 50">
+
+        <!-- Semester header -->
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="flex items-center justify-center w-7 h-7 rounded-lg text-[11px] font-bold shrink-0"
+               [class]="sem >= 8
+                 ? 'bg-disponible/20 text-disponible border border-disponible/30'
+                 : 'bg-slate-800 text-slate-400 border border-slate-700'">
+            {{ sem < 10 ? '0' + sem : sem }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-[11px] font-black uppercase tracking-widest text-slate-500 leading-none">
+              Semestre
+            </h2>
+            <p *ngIf="sem >= 8" class="text-[9px] text-disponible/70 mt-0.5 tracking-wide uppercase">
+              Nivel final
+            </p>
+          </div>
+          <span class="text-[10px] text-slate-600 shrink-0">
+            {{ filtrarPorSemestre(sem).length }}
+          </span>
+        </div>
+
+        <!-- Separator line -->
+        <div class="h-px mb-4"
+             [class]="sem >= 8 ? 'bg-disponible/20' : 'bg-slate-800'"></div>
+
+        <!-- Cards -->
+        <div class="space-y-3 flex-1 overflow-y-auto pr-1 custom-scroll">
+          <app-materia-card
+            *ngFor="let materia of filtrarPorSemestre(sem)"
+            [materia]="materia"
+            (accion)="abrirModal($event)">
+          </app-materia-card>
+
+          <!-- Empty state per semester -->
+          <div *ngIf="filtrarPorSemestre(sem).length === 0"
+               class="text-center py-8 text-slate-700 text-xs">
+            Sin materias
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── VISTA GRAFO (placeholder redirige al componente) ─ -->
+    <div *ngIf="!loading && !errorMsg && vistaActiva === 'grafo'"
+         class="h-full">
+      <app-vista-grafo />
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ─── MODAL NOTA ─────────────────────────────────────── -->
+<app-modal-nota
+  *ngIf="materiaSeleccionada"
+  [materia]="materiaSeleccionada!"
+  (cerrar)="cerrarModal()"
+  (guardado)="onGuardado()">
+</app-modal-nota>

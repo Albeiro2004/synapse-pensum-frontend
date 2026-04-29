@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Playfair+Display:wght@600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply bg-slate-950 text-slate-200 font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-slate-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-500; }
+}
+
+@layer components {
+  .card {
+    @apply bg-slate-800 border border-slate-700 rounded-xl;
+  }
+
+  .badge-aprobada {
+    @apply bg-aprobada/10 text-aprobada border border-aprobada/20 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-disponible {
+    @apply bg-disponible/10 text-disponible border border-disponible/20 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-bloqueada {
+    @apply bg-slate-700/50 text-slate-400 border border-slate-600/30 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  .btn-primary {
+    @apply bg-aprobada text-white font-medium px-5 py-2.5 rounded-lg
+           hover:bg-aprobada/90 active:scale-95 transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply text-slate-400 hover:text-slate-200 font-medium px-4 py-2 rounded-lg
+           hover:bg-slate-700/50 transition-all duration-150;
+  }
+
+  .input-field {
+    @apply bg-slate-800 border border-slate-600 text-slate-200 rounded-lg px-4 py-2.5
+           placeholder-slate-500 focus:outline-none focus:border-aprobada focus:ring-1 focus:ring-aprobada/30
+           transition-colors duration-150 w-full;
+  }
+}
+
+/* DAG graph styles */
+.node-aprobada circle { fill: #10B981; stroke: #059669; }
+.node-disponible circle { fill: #F59E0B; stroke: #D97706; }
+.node-bloqueada circle { fill: #334155; stroke: #475569; }
+.node text { fill: #E2E8F0; font-family: 'DM Sans', sans-serif; }
+.link { stroke: #3A4A6B; stroke-width: 1.5px; fill: none; }
+.link-aprobada { stroke: #10B981; stroke-width: 2px; opacity: 0.5; }
