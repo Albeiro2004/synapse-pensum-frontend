@@ -14,14 +14,14 @@ export class HistorialService {
 
   registrarNota(request: NotaRequest) {
     return this.http.post<void>(
-      `${environment.apiUrl}/academico/nota`,
+      `${environment.apiUrl}/historial/registrar-nota`,
       request
     );
   }
 
   actualizarNota(request: NotaRequest) {
     return this.http.put<void>(
-      `${environment.apiUrl}/academico/nota`,
+      `${environment.apiUrl}/historial/actualizar-nota`,
       request
     );
   }
