@@ -22,7 +22,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12"/>
             </svg>
           </div>
-          <span class="font-display text-white text-xl">Synapse</span>
+          <span class="font-display text-white text-xl">Estadística</span>
         </div>
 
         <h2 class="font-display text-2xl text-white mb-1">Crear cuenta</h2>

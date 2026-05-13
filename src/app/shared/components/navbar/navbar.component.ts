@@ -20,7 +20,7 @@ import { AuthService } from '../../../core/services/auth.service';
             </svg>
           </div>
           <div>
-            <span class="font-display text-white text-lg leading-none">Synapse</span>
+            <span class="font-display text-white text-lg leading-none">Estadística</span>
             <span class="text-slate-500 text-xs block">Motor Académico</span>
           </div>
         </div>
