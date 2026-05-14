@@ -2,7 +2,10 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PensumService } from '../../../core/services/pensum.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { MateriaCardComponent } from '../../../shared/components/materia-card/materia-card.component';
+import {
+  AccionCardEvent,
+  MateriaCardComponent,
+} from '../../../shared/components/materia-card/materia-card.component';
 import { ModalNotaComponent } from '../modal-nota/modal-nota.component';
 import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
 import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
@@ -13,11 +16,11 @@ import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
   imports: [CommonModule, MateriaCardComponent, ModalNotaComponent, SpinnerComponent],
   template: `
     <div class="p-4 sm:p-6 max-w-7xl mx-auto">
-
       <!-- Stats bar -->
-      <div *ngIf="!pensum.loading() && pensum.materias().length > 0"
-           class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 animate-fade-in">
-
+      <div
+        *ngIf="!pensum.loading() && pensum.materias().length > 0"
+        class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 animate-fade-in"
+      >
         <div class="card p-4">
           <p class="text-xs text-slate-500 mb-1">Progreso</p>
           <div class="flex items-end gap-2">
@@ -25,10 +28,14 @@ import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
             <span class="text-slate-500 text-sm mb-0.5">/ {{ stats().total }}</span>
           </div>
           <div class="h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
-            <div class="h-full bg-aprobada rounded-full transition-all duration-700"
-                 [style.width.%]="progresoPorc()"></div>
+            <div
+              class="h-full bg-aprobada rounded-full transition-all duration-700"
+              [style.width.%]="progresoPorc()"
+            ></div>
           </div>
-          <p class="text-[10px] text-slate-600 mt-1">{{ progresoPorc() | number:'1.0-0' }}% completado</p>
+          <p class="text-[10px] text-slate-600 mt-1">
+            {{ progresoPorc() | number: '1.0-0' }}% completado
+          </p>
         </div>
 
         <div class="card p-4">
@@ -64,14 +71,17 @@ import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
 
       <!-- Semestres grid -->
       <div *ngIf="!pensum.loading() && !pensum.error()">
-        <div *ngFor="let entry of semestresEntries; let i = index"
-             class="mb-8 animate-slide-up"
-             [style.animation-delay.ms]="i * 60">
-
+        <div
+          *ngFor="let entry of semestresEntries; let i = index"
+          class="mb-8 animate-slide-up"
+          [style.animation-delay.ms]="i * 60"
+        >
           <!-- Semester header -->
           <div class="flex items-center gap-3 mb-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium"
-                 [class]="semestreHeaderClass(entry[0])">
+            <div
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium"
+              [class]="semestreHeaderClass(entry[0])"
+            >
               {{ entry[0] }}
             </div>
             <h2 class="text-sm font-medium text-slate-400">
@@ -86,12 +96,11 @@ import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
             <app-materia-card
               *ngFor="let materia of entry[1]"
               [materia]="materia"
-              (accion)="abrirModal($event)"
+              (accion)="onAccion($event)"
             />
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- Modal -->
@@ -101,7 +110,7 @@ import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
       (cerrar)="cerrarModal()"
       (guardado)="onGuardado()"
     />
-  `
+  `,
 })
 export class VistaGrillaComponent implements OnInit {
   pensum = inject(PensumService);
@@ -118,15 +127,19 @@ export class VistaGrillaComponent implements OnInit {
     return [...this.pensum.getMateriasPorSemestre().entries()];
   }
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.cargar();
+  }
 
   cargar() {
     const id = this.auth.estudianteId();
     if (id) this.pensum.cargarPensum(id).subscribe();
   }
 
-  abrirModal(materia: MateriaEstadoDTO) {
-    this.materiaSeleccionada.set(materia);
+  onAccion(event: AccionCardEvent) {
+    if (event.accion === 'nota' || event.accion === 'matricular' || event.accion === 'cancelar') {
+      this.materiaSeleccionada.set(event.materia);
+    }
   }
 
   cerrarModal() {

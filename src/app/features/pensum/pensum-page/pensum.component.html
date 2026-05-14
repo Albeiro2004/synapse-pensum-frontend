@@ -1,8 +1,12 @@
 <div class="min-h-screen bg-slate-950 text-slate-200 flex flex-col">
 
+  <!-- Fondo grid -->
+  <div class="fixed inset-0 pointer-events-none"
+       style="background-image: linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px); background-size:40px 40px;">
+  </div>
+
   <!-- ─── NAVBAR ─────────────────────────────────────────── -->
   <nav class="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center shrink-0">
-
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 bg-aprobada/20 border border-aprobada/30 rounded-lg flex items-center justify-center">
         <svg class="w-4 h-4 text-aprobada" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -60,11 +64,10 @@
 
   <!-- ─── STATS BAR ─────────────────────────────────────── -->
   <div *ngIf="!loading && materias.length > 0"
-       class="shrink-0 border-b border-slate-800/60 px-6 py-3 flex items-center gap-6 overflow-x-auto">
+       class="relative shrink-0 border-b border-slate-800/60 px-6 py-3 flex items-center gap-6 overflow-x-auto">
     <div class="flex items-center gap-3 min-w-max">
       <div class="w-28 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-        <div class="h-full bg-aprobada rounded-full transition-all duration-700"
-             [style.width.%]="progresoPorc"></div>
+        <div class="h-full bg-aprobada rounded-full transition-all duration-700" [style.width.%]="progresoPorc"></div>
       </div>
       <span class="text-xs text-slate-400">
         <span class="text-white font-semibold">{{ stats.aprobadas }}</span>/{{ stats.total }} materias
@@ -73,6 +76,9 @@
     <div class="w-px h-4 bg-slate-800 shrink-0"></div>
     <div class="flex items-center gap-3">
       <span class="badge-aprobada">{{ stats.aprobadas }} aprobadas</span>
+      <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-medium px-2 py-0.5 rounded-full">
+        {{ stats.matriculadas }} matriculadas
+      </span>
       <span class="badge-disponible">{{ stats.disponibles }} disponibles</span>
       <span class="badge-bloqueada">{{ stats.bloqueadas }} bloqueadas</span>
     </div>
@@ -83,10 +89,10 @@
   </div>
 
   <!-- ─── MAIN ──────────────────────────────────────────── -->
-  <main class="flex-1 overflow-hidden flex flex-col">
+  <main class="flex-1 overflow-hidden flex flex-col relative">
 
     <!-- Loading -->
-    <div *ngIf="loading" class="flex flex-col justify-center items-center h-full gap-4">
+    <div *ngIf="loading" class="flex flex-col justify-center items-center h-full gap-4 mt-9">
       <div class="w-10 h-10 rounded-full border-2 border-slate-700 border-t-aprobada animate-spin"></div>
       <p class="text-slate-500 text-sm">Cargando malla curricular…</p>
     </div>
@@ -105,78 +111,57 @@
     <!-- ── VISTA GRILLA ──────────────────────────────────── -->
     <ng-container *ngIf="!loading && !errorMsg && vistaActiva === 'grilla'">
 
-      <!-- ── Paginador de bloques ── -->
+      <!-- Paginador -->
       <div class="shrink-0 px-6 pt-5 pb-0 flex items-center gap-3 justify-center">
 
-        <button
-          (click)="paginaActiva = 'basico'"
-          class="group flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-200"
-          [class]="paginaActiva === 'basico'
-            ? 'bg-slate-800 border-slate-600 text-white'
-            : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'">
+        <button (click)="paginaActiva = 'basico'"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-200"
+                [class]="paginaActiva === 'basico' ? 'bg-slate-800 border-slate-600 text-white' : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'">
           <div class="flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold"
-               [class]="paginaActiva === 'basico' ? 'bg-aprobada/20 text-aprobada' : 'bg-slate-700 text-slate-500'">
-            I
-          </div>
+               [class]="paginaActiva === 'basico' ? 'bg-aprobada/20 text-aprobada' : 'bg-slate-700 text-slate-500'">I</div>
           <div class="text-left">
             <p class="text-xs font-semibold leading-none">Ciclo Básico</p>
-            <p class="text-[10px] mt-0.5"
-               [class]="paginaActiva === 'basico' ? 'text-slate-400' : 'text-slate-600'">
-              Semestres 1 – 5
-            </p>
+            <p class="text-[10px] mt-0.5" [class]="paginaActiva === 'basico' ? 'text-slate-400' : 'text-slate-600'">Semestres 1 – 5</p>
           </div>
-          <!-- mini progress -->
           <div class="hidden sm:flex flex-col items-end gap-1 ml-2">
             <div class="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
               <div class="h-full bg-aprobada/60 rounded-full transition-all duration-500"
                    [style.width.%]="progresoPorBloque('basico')"></div>
             </div>
-            <span class="text-[9px]"
-                  [class]="paginaActiva === 'basico' ? 'text-slate-500' : 'text-slate-700'">
+            <span class="text-[9px]" [class]="paginaActiva === 'basico' ? 'text-slate-500' : 'text-slate-700'">
               {{ aprobadorPorBloque('basico') }}/{{ totalPorBloque('basico') }}
             </span>
           </div>
         </button>
 
-        <!-- divider arrow -->
         <svg class="w-4 h-4 text-slate-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18l6-6-6-6"/>
         </svg>
 
-        <button
-          (click)="paginaActiva = 'avanzado'"
-          class="group flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-200"
-          [class]="paginaActiva === 'avanzado'
-            ? 'bg-slate-800 border-slate-600 text-white'
-            : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'">
+        <button (click)="paginaActiva = 'avanzado'"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-200"
+                [class]="paginaActiva === 'avanzado' ? 'bg-slate-800 border-slate-600 text-white' : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'">
           <div class="flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold"
-               [class]="paginaActiva === 'avanzado' ? 'bg-disponible/20 text-disponible' : 'bg-slate-700 text-slate-500'">
-            II
-          </div>
+               [class]="paginaActiva === 'avanzado' ? 'bg-disponible/20 text-disponible' : 'bg-slate-700 text-slate-500'">II</div>
           <div class="text-left">
             <p class="text-xs font-semibold leading-none">Ciclo Avanzado</p>
-            <p class="text-[10px] mt-0.5"
-               [class]="paginaActiva === 'avanzado' ? 'text-slate-400' : 'text-slate-600'">
-              Semestres 6 – 9
-            </p>
+            <p class="text-[10px] mt-0.5" [class]="paginaActiva === 'avanzado' ? 'text-slate-400' : 'text-slate-600'">Semestres 6 – 9</p>
           </div>
           <div class="hidden sm:flex flex-col items-end gap-1 ml-2">
             <div class="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
               <div class="h-full bg-disponible/60 rounded-full transition-all duration-500"
                    [style.width.%]="progresoPorBloque('avanzado')"></div>
             </div>
-            <span class="text-[9px]"
-                  [class]="paginaActiva === 'avanzado' ? 'text-slate-500' : 'text-slate-700'">
+            <span class="text-[9px]" [class]="paginaActiva === 'avanzado' ? 'text-slate-500' : 'text-slate-700'">
               {{ aprobadorPorBloque('avanzado') }}/{{ totalPorBloque('avanzado') }}
             </span>
           </div>
         </button>
       </div>
 
-      <!-- ── Columnas de semestres ── -->
+      <!-- Columnas -->
       <div class="flex-1 overflow-hidden">
 
-        <!-- Página 1: semestres 1-5 -->
         <div *ngIf="paginaActiva === 'basico'"
              class="h-full flex gap-5 overflow-x-auto px-6 pt-5 pb-8 snap-x snap-mandatory scroll-smooth justify-center">
           <div *ngFor="let sem of semestresBasico; let i = index"
@@ -186,7 +171,6 @@
           </div>
         </div>
 
-        <!-- Página 2: semestres 6-9 -->
         <div *ngIf="paginaActiva === 'avanzado'"
              class="h-full flex gap-5 overflow-x-auto px-6 pt-5 pb-8 snap-x snap-mandatory scroll-smooth justify-center">
           <div *ngFor="let sem of semestresAvanzado; let i = index"
@@ -199,7 +183,7 @@
       </div>
     </ng-container>
 
-    <!-- ── VISTA GRAFO ───────────────────────────────────── -->
+    <!-- Vista grafo -->
     <div *ngIf="!loading && !errorMsg && vistaActiva === 'grafo'" class="h-full">
       <app-vista-grafo />
     </div>
@@ -207,13 +191,11 @@
   </main>
 </div>
 
-<!-- ─── TEMPLATE: columna de semestre ──────────────────── -->
+<!-- Template columna semestre -->
 <ng-template #semCol let-sem="sem">
   <div class="flex items-center gap-2.5 mb-4">
     <div class="flex items-center justify-center w-7 h-7 rounded-lg text-[11px] font-bold shrink-0"
-         [class]="sem >= 8
-           ? 'bg-disponible/20 text-disponible border border-disponible/30'
-           : 'bg-slate-800 text-slate-400 border border-slate-700'">
+         [class]="sem >= 8 ? 'bg-disponible/20 text-disponible border border-disponible/30' : 'bg-slate-800 text-slate-400 border border-slate-700'">
       {{ sem < 10 ? '0' + sem : sem }}
     </div>
     <div class="flex-1 min-w-0">
@@ -229,17 +211,17 @@
     <app-materia-card
       *ngFor="let materia of filtrarPorSemestre(sem)"
       [materia]="materia"
-      (accion)="abrirModal($event)">
+      (accion)="onAccion($event)">
     </app-materia-card>
     <div *ngIf="filtrarPorSemestre(sem).length === 0"
          class="text-center py-8 text-slate-700 text-xs">Sin materias</div>
   </div>
 </ng-template>
 
-<!-- ─── MODAL NOTA ─────────────────────────────────────── -->
+<!-- Modal nota -->
 <app-modal-nota
-  *ngIf="materiaSeleccionada"
-  [materia]="materiaSeleccionada!"
+  *ngIf="materiaParaNota"
+  [materia]="materiaParaNota!"
   (cerrar)="cerrarModal()"
   (guardado)="onGuardado()">
 </app-modal-nota>

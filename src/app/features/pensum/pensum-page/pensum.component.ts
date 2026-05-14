@@ -2,11 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { NgForOf, NgIf, NgTemplateOutlet } from '@angular/common';
 import { PensumService } from '../../../core/services/pensum.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { MatriculaService } from '../../../core/services/matricula.service';
 import { MateriaEstadoDTO } from '../../../models/materia-estado.dto';
-import { MateriaCardComponent } from '../../../shared/components/materia-card/materia-card.component';
+import {
+  MateriaCardComponent,
+  AccionCardEvent,
+  AccionCard,
+} from '../../../shared/components/materia-card/materia-card.component';
 import { ModalNotaComponent } from '../modal-nota/modal-nota.component';
 import { VistaGrafoComponent } from '../vista-grafo/vista-grafo.component';
 import { ErrorModalComponent } from '../../error/error-modal.component';
+import { finalize } from 'rxjs';
 
 type Vista = 'grilla' | 'grafo';
 type Pagina = 'basico' | 'avanzado';
@@ -31,7 +37,8 @@ export class PensumComponent implements OnInit {
   errorMsg: string | null = null;
   vistaActiva: Vista = 'grilla';
   paginaActiva: Pagina = 'basico';
-  materiaSeleccionada: MateriaEstadoDTO | null = null;
+  materiaParaNota: MateriaEstadoDTO | null = null;
+  loadingAction: AccionCard | null = null;
 
   readonly semestresBasico = [1, 2, 3, 4, 5];
   readonly semestresAvanzado = [6, 7, 8, 9];
@@ -39,13 +46,13 @@ export class PensumComponent implements OnInit {
   constructor(
     public pensumService: PensumService,
     public authService: AuthService,
+    private matriculaService: MatriculaService,
   ) {}
 
   ngOnInit(): void {
     this.cargarDatos();
   }
 
-  // ── Stats ────────────────────────────────────────────────
   get stats() {
     return this.pensumService.getStats();
   }
@@ -59,12 +66,11 @@ export class PensumComponent implements OnInit {
     return this.authService.nombreCompleto().charAt(0).toUpperCase() || 'E';
   }
 
-  // ── Progreso por bloque (para los botones de paginación) ─
   progresoPorBloque(bloque: Pagina): number {
     const sems = bloque === 'basico' ? this.semestresBasico : this.semestresAvanzado;
-    const delBloque = this.materias.filter((m) => sems.includes(m.semestre));
-    const aprobadas = delBloque.filter((m) => m.estado === 'APROBADA').length;
-    return delBloque.length > 0 ? (aprobadas / delBloque.length) * 100 : 0;
+    const del = this.materias.filter((m) => sems.includes(m.semestre));
+    const aprobadas = del.filter((m) => m.estado === 'APROBADA').length;
+    return del.length > 0 ? (aprobadas / del.length) * 100 : 0;
   }
 
   aprobadorPorBloque(bloque: Pagina): number {
@@ -77,17 +83,14 @@ export class PensumComponent implements OnInit {
     return this.materias.filter((m) => sems.includes(m.semestre)).length;
   }
 
-  // ── Data ─────────────────────────────────────────────────
   cargarDatos(): void {
     const id = this.authService.estudianteId();
     if (!id) {
       this.authService.logout();
       return;
     }
-
     this.loading = true;
     this.errorMsg = null;
-
     this.pensumService.cargarPensum(id).subscribe({
       next: (data) => {
         this.materias = data;
@@ -101,7 +104,13 @@ export class PensumComponent implements OnInit {
   }
 
   filtrarPorSemestre(num: number): MateriaEstadoDTO[] {
-    const orden: Record<string, number> = { APROBADA: 0, DISPONIBLE: 1, BLOQUEADA: 2 };
+    const orden: Record<string, number> = {
+      MATRICULADA: 0,
+      APROBADA: 1,
+      DISPONIBLE: 2,
+      REPROBADA: 3,
+      BLOQUEADA: 4,
+    };
     return this.materias
       .filter((m) => m.semestre === num)
       .sort((a, b) => {
@@ -110,19 +119,55 @@ export class PensumComponent implements OnInit {
       });
   }
 
-  // ── Modal ─────────────────────────────────────────────────
-  abrirModal(materia: MateriaEstadoDTO): void {
-    this.materiaSeleccionada = materia;
+  onAccion(event: AccionCardEvent): void {
+    const { materia, accion } = event;
+
+    // 1. Nota → solo abre modal, no requiere loading
+    if (accion === 'nota') {
+      this.materiaParaNota = materia;
+      return;
+    }
+
+    // 2. Delegamos a los métodos privados
+    if (accion === 'matricular') this.matricular(materia);
+    else if (accion === 'cancelar') this.cancelarMatricula(materia);
   }
+
+  private matricular(materia: MateriaEstadoDTO): void {
+    const estudianteId = this.authService.estudianteId();
+    if (!estudianteId) return;
+
+    this.loadingAction = 'matricular';
+    this.matriculaService
+      .matricular({ estudianteId, materiaId: materia.id })
+      .pipe(finalize(() => (this.loadingAction = null))) // ✅ Se ejecuta SIEMPRE (éxito o error)
+      .subscribe({
+        next: () => this.cargarDatos(),
+        error: (err) => console.error('Error al matricular', err),
+      });
+  }
+
+  private cancelarMatricula(materia: MateriaEstadoDTO): void {
+    const estudianteId = this.authService.estudianteId();
+    if (!estudianteId) return;
+
+    this.loadingAction = 'cancelar';
+    this.matriculaService
+      .cancelar({ estudianteId, materiaId: materia.id })
+      .pipe(finalize(() => (this.loadingAction = null)))
+      .subscribe({
+        next: () => this.cargarDatos(),
+        error: (err) => console.error('Error al cancelar', err),
+      });
+  }
+
   cerrarModal(): void {
-    this.materiaSeleccionada = null;
+    this.materiaParaNota = null;
   }
   onGuardado(): void {
     this.cerrarModal();
     this.cargarDatos();
   }
-
-  // ── Auth ──────────────────────────────────────────────────
   onLogout(): void {
     this.authService.logout();
   }

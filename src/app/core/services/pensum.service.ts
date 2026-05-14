@@ -16,29 +16,25 @@ export class PensumService {
 
   constructor(private http: HttpClient) {}
 
-  /** Carga el pensum completo del estudiante y actualiza el signal interno */
   cargarPensum(estudianteId: string) {
     this._loading.set(true);
     this._error.set(null);
     return this.http
-      .get<MateriaEstadoDTO[]>(
-        `${environment.apiUrl}/academico/disponibles/${estudianteId}`
-      )
+      .get<MateriaEstadoDTO[]>(`${environment.apiUrl}/academico/disponibles/${estudianteId}`)
       .pipe(
         tap({
-          next: data => {
+          next: (data) => {
             this._materias.set(data);
             this._loading.set(false);
           },
-          error: err => {
-            this._error.set(err.error?.mensaje ?? 'Error cargando el pensum');
+          error: (err) => {
+            this._error.set(err.error?.mensaje ?? 'Error');
             this._loading.set(false);
           },
-        })
+        }),
       );
   }
 
-  /** Agrupa materias por semestre ordenadas (1→9) */
   getMateriasPorSemestre(): Map<number, MateriaEstadoDTO[]> {
     const map = new Map<number, MateriaEstadoDTO[]>();
     for (const m of this._materias()) {
@@ -48,16 +44,17 @@ export class PensumService {
     return new Map([...map.entries()].sort((a, b) => a[0] - b[0]));
   }
 
-  /** Estadísticas derivadas del estado actual del grafo */
   getStats() {
     const all = this._materias();
     return {
       total: all.length,
-      aprobadas: all.filter(m => m.estado === 'APROBADA').length,
-      disponibles: all.filter(m => m.estado === 'DISPONIBLE').length,
-      bloqueadas: all.filter(m => m.estado === 'BLOQUEADA').length,
+      aprobadas: all.filter((m) => m.estado === 'APROBADA').length,
+      matriculadas: all.filter((m) => m.estado === 'MATRICULADA').length,
+      disponibles: all.filter((m) => m.estado === 'DISPONIBLE').length,
+      reprobadas: all.filter((m) => m.estado === 'REPROBADA').length,
+      bloqueadas: all.filter((m) => m.estado === 'BLOQUEADA').length,
       creditosAprobados: all
-        .filter(m => m.estado === 'APROBADA')
+        .filter((m) => m.estado === 'APROBADA')
         .reduce((s, m) => s + m.creditos, 0),
       creditosTotales: all.reduce((s, m) => s + m.creditos, 0),
     };
